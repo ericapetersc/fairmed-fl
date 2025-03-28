@@ -1,0 +1,28 @@
+defaults:
+  - _self_
+  - dataset: chexpert
+  - partitioner: dirichlet
+
+batch_size: 32
+num_workers: 4
+use_cuda: True
+num_epochs: 100
+steps: 100
+opt: 'adam'
+learning_rate: 0.01
+momentum: 0.9 # Only used when optimizer = sgd
+weight_decay: 0.0001 # Only used when optimizer = sgd
+reduce_lr: true
+scheduler_mode: 'min'
+scheduler_factor: 0.1
+scheduler_patience: 5
+early_stop: true
+early_stop_patience: 10
+pos_weight: false
+alpha: 0.2 # Only used when pos_weight = True
+
+model:
+  _target_: src.fairmed_fl.model.DenseNet
+  num_classes: ${dataset.config.num_classes}
+  pretrained: true
+  colormode: "rgb"

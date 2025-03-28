@@ -1,0 +1,18 @@
+_target_: src.fairmed_fl.dataset.CustomDataset
+config:
+  _target_: src.fairmed_fl.dataset.DatasetConfig
+  data_path: {path/to/file.csv}
+  patient_id_col: 'patient_id'
+  num_classes: 7
+  classes:
+    - 'atelectasis'
+    - 'cardiomegaly'
+    - 'consolidation'
+    - 'edema'
+    - 'effusion'
+    - 'pneumonia'
+    - 'pneumothorax'
+  policy: 'ones'
+  sensitive_attr:
+    - 'sex'
+    - 'age_group'

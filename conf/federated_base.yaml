@@ -1,0 +1,36 @@
+defaults:
+  - _self_
+  - dataset: nih
+  - partitioner: dirichlet
+  - strategy: customfedavg
+
+server:
+  num_clients: ${partitioner.config.num_clients}
+  max_workers: 4
+  num_rounds: 20
+
+model:
+  _target_: src.fairmed_fl.model.DenseNet
+  num_classes: ${dataset.config.num_classes}
+  pretrained: true
+  colormode: "rgb"
+
+client:
+  id: 0
+  batch_size: 32
+  num_workers: 4
+  use_cuda: true
+  num_epochs: 1
+  learning_rate: 0.01
+  momentum: 0.9
+  weight_decay: 0.0001
+  pos_weight: false
+  alpha: 0.2 # Only used when pos_weight = True
+
+simulation:
+  client_fn:
+    _target_: src.fairmed_fl.client.get_client_fn
+  client_resources:
+    num_cpus: 16
+    num_gpus: 0.25
+  clients_test: true

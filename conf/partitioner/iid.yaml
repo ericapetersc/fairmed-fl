@@ -1,0 +1,11 @@
+_target_: src.fairmed_fl.partitioner.IidPartitioner
+config:
+  _target_: src.fairmed_fl.partitioner.PartitionConfig
+  classes: ${dataset.config.classes}
+  num_clients: 5
+  patient_id_col: ${dataset.config.patient_id_col}
+  sensitive_attr_cols: ${dataset.config.sensitive_attr}
+  val_ratio: 0.1
+  test_ratio: 0.2
+  datadir: ./clients
+  plot_clients: True
