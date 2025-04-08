@@ -4,7 +4,7 @@ PYTHON := python
 PIP := pip
 REQUIREMENTS_FILE := requirements.txt
 
-all: setup test run
+all: setup run
 
 setup: $(REQUIREMENTS_FILE)
 	@echo "Setting up the environment..."
@@ -15,17 +15,21 @@ format:
 	black src/fairmed_fl/*.py
 	docformatter src/fairmed_fl/*.py
 
+run-partitioning:
+	@echo "Running partitioner.py with config file: centralized_base.yaml"
+	$(PYTHON) -m src.fairmed_fl.partitioner
+
 run-centralized:
 	@echo "Running main.py with config file: centralized_base.yaml"
-	$(PYTHON) -m src.fairmed_fl.main.py
+	$(PYTHON) -m src.fairmed_fl.main
 
 run-federated:
 	@echo "Running federated.py with config file: federated_base.yaml"
-	$(PYTHON) -m src.fairmed_fl.federated.py
+	$(PYTHON) -m src.fairmed_fl.federated
 
 run-simulation:
 	@echo "Running simulation.py with config file: federated_base.yaml"
-	$(PYTHON) -m src.fairmed_fl.simulation.py
+	$(PYTHON) -m src.fairmed_fl.simulation
 
 clean:
 	@echo "Cleaning caches..."
