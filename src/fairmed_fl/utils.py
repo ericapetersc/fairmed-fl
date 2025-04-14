@@ -138,6 +138,68 @@ def get_metrics_per_group(classes, sensitive_attr, y_trues, y_probs, y_preds, al
     return results
 
 
+def get_fairness_metrics(group_metrics):
+    summary = {}
+
+    for attr, group_data in group_metrics.items():
+        tprs = {}
+        fprs = {}
+        aucs = {}
+
+        for group, metrics in group_data.items():
+            tprs[group] = metrics["overall_metrics"].get("mean_tpr", 0)
+            fprs[group] = metrics["overall_metrics"].get("mean_fpr", 0)
+            aucs[group] = metrics["overall_metrics"].get("auc", 0)
+
+        # Equal Opportunity: max TPR - min TPR
+        max_tpr_group = max(tprs, key=tprs.get)
+        min_tpr_group = min(tprs, key=tprs.get)
+        equal_opportunity_diff = abs(tprs[max_tpr_group] - tprs[min_tpr_group])
+        equal_opportunity_ratio = tprs[min_tpr_group] / tprs[max_tpr_group]
+
+        # Equalized Odds: max(TPR + FPR) - min(TPR + FPR)
+        odds = {g: tprs[g] + fprs[g] for g in tprs}
+        max_odds_group = max(odds, key=odds.get)
+        min_odds_group = min(odds, key=odds.get)
+        equalized_odds_diff = abs(odds[max_odds_group] - odds[min_odds_group])
+        equalized_odds_ratio = odds[min_odds_group] / odds[max_odds_group]
+
+        # AUC GAP and Worst AUC
+        max_auc_group = max(aucs, key=aucs.get)
+        min_auc_group = min(aucs, key=aucs.get)
+        auc_gap = aucs[max_auc_group] - aucs[min_auc_group]
+        worst_auc = aucs[min_auc_group]
+
+        summary[attr] = {
+            "equal_opportunity_diff": {
+                "value": equal_opportunity_diff,
+                "groups": [min_tpr_group, max_tpr_group],
+            },
+            "equal_opportunity_ratio": {
+                "value": equal_opportunity_ratio,
+                "groups": [min_tpr_group, max_tpr_group],
+            },
+            "equalized_odds_diff": {
+                "value": equalized_odds_diff,
+                "groups": [min_odds_group, max_odds_group],
+            },
+            "equalized_odds_ratio": {
+                "value": equalized_odds_ratio,
+                "groups": [min_odds_group, max_odds_group],
+            },
+            "worst_auc": {
+                "value": worst_auc,
+                "group": min_auc_group,
+            },
+            "auc_gap": {
+                "value": auc_gap,
+                "groups": [min_auc_group, max_auc_group],
+            },
+        }
+
+    return summary
+
+
 def save_json_results(output_dir, filename, data):
     with open(os.path.join(output_dir, filename), "w") as f:
         json.dump(data, f)
