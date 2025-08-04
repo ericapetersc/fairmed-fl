@@ -1,5 +1,6 @@
 import json
 import os
+from glob import glob
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -203,3 +204,91 @@ def get_fairness_metrics(group_metrics):
 def save_json_results(output_dir, filename, data):
     with open(os.path.join(output_dir, filename), "w") as f:
         json.dump(data, f)
+
+
+### Format DataFrame Results
+
+
+def get_clients(execution, metrics_type="metrics"):
+    """
+    Read files (client_*_{metrics_type}.json) inside {execution}'s output folder and return a list with json data for each client.
+    """
+    clients = []
+    for filename in glob(f"{execution}/client_*_{metrics_type}.json"):
+        with open(filename) as json_data:
+            clients.append(json.load(json_data))
+    return clients
+
+
+def get_train_df(clients, clients_map):
+    """
+    Transform clients training data into a dataframe.
+    """
+    dfs = []
+    for cid, client in enumerate(clients):
+        aux = pd.DataFrame(client)
+        aux = aux.T
+        aux["epoch"] = aux.index
+        aux["client"] = [clients_map[cid]] * len(aux)
+        dfs.append(aux)
+    return pd.concat(dfs)
+
+
+def get_overall_metrics_df(clients, clients_map):
+    df = pd.DataFrame([x["overall_metrics"] for x in clients])
+    df["client"] = df.index
+    df.index = df["client"].apply(lambda x: clients_map[x])
+    df = df.drop(columns="client")
+    return df
+
+
+def get_class_metrics_df(clients, clients_map):
+    df = pd.DataFrame([x["class_metrics"] for x in clients])
+    df["client"] = df.index
+    df.index = df["client"].apply(lambda x: clients_map[x])
+    df = df.drop(columns="client")
+    return df.explode(list(df.columns.values))
+
+
+def get_groups_metrics_df(clients, clients_map):
+    rows = []
+    for cid, client in enumerate([x["group_metrics"] for x in clients]):
+        for group_type, groups in client.items():
+            for group_name, metrics in groups.items():
+                overall_metrics = metrics["overall_metrics"]
+                rows.append(
+                    [
+                        clients_map[cid],
+                        group_type,
+                        group_name,
+                        overall_metrics["auc"],
+                        overall_metrics["accuracy"],
+                        overall_metrics["precision"],
+                        overall_metrics["recall"],
+                        overall_metrics["num_samples"],
+                        overall_metrics["mean_tpr"],
+                        overall_metrics["mean_fpr"],
+                        overall_metrics["mean_fnr"],
+                        overall_metrics["mean_tnr"],
+                        overall_metrics["mean_ppr"],
+                    ]
+                )
+
+    return pd.DataFrame(
+        rows,
+        columns=[
+            "client",
+            "group_type",
+            "group_name",
+            "auc",
+            "accuracy",
+            "precision",
+            "recall",
+            "num_samples",
+            "mean_tpr",
+            "mean_fpr",
+            "mean_fnr",
+            "mean_tnr",
+            "mean_ppr",
+        ],
+    )

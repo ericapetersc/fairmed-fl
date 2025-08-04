@@ -10,10 +10,10 @@ from torch import optim
 from torchvision.models import (
     DenseNet121_Weights,
     ResNet50_Weights,
-    VGG16_Weights,
+    VGG16_BN_Weights,
     densenet121,
     resnet50,
-    vgg16,
+    vgg16_bn,
 )
 from tqdm import tqdm
 
@@ -46,14 +46,14 @@ class ResNet(CNN):
 class VGG(CNN):
     def __init__(self, num_classes, pretrained, colormode):
         super(VGG, self).__init__(num_classes, pretrained, colormode)
-        weights = VGG16_Weights.IMAGENET1K_V1 if self.pretrained else None
-        self.model = vgg16(weights=weights)
+        weights = VGG16_BN_Weights.IMAGENET1K_V1 if self.pretrained else None
+        self.model = vgg16_bn(weights=weights)
         if self.colormode == "greyscale":
             self.model.features[0] = nn.Conv2d(
                 1, 64, kernel_size=(3, 3), padding=(1, 1), bias=False
             )
-        self.model.classifier[6] = nn.Linear(
-            self.model.classifier[6].in_features, self.num_classes
+        self.model.classifier[-1] = nn.Linear(
+            self.model.classifier[-1].in_features, self.num_classes
         )
 
 
