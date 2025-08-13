@@ -28,7 +28,9 @@ def main(cfg: DictConfig) -> None:
 
         logging.info(f"Starting client {cid} train...")
 
-        trainset, valset, testset = partitioner.load_client_datasets(cid, cfg.dataset)
+        trainset, valset, testset = partitioner.load_client_datasets(
+            cid, cfg.dataset, cfg.balance_data
+        )
 
         trainloader = DataLoader(
             trainset,
@@ -54,6 +56,7 @@ def main(cfg: DictConfig) -> None:
 
         class_weights = None
         if cfg.pos_weight:
+            logging.info("Calculating class weights...")
             class_weights = get_class_weights(trainloader, len(classes), cfg.alpha)
 
         train_results = train_centralized(

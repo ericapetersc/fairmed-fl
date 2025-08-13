@@ -92,12 +92,15 @@ class Partitioner:
                 clients, self.sensitive_attr_cols, "sensitive_attr_distributions"
             )
 
-    def load_client_datasets(self, cid, config):
+    def load_client_datasets(self, cid, config, balance_data=False):
         if not self.datadir:
             logging.error("Data directory is not specified.")
         data = pd.read_csv(os.path.join(self.datadir, f"client_{cid}.csv"))
+
         return (
-            instantiate(config, data=data[data["split"] == "train"]),
+            instantiate(
+                config, data=data[data["split"] == "train"], balance_data=balance_data
+            ),
             instantiate(config, data=data[data["split"] == "val"]),
             instantiate(config, data=data[data["split"] == "test"]),
         )
